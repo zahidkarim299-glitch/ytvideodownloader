@@ -7,8 +7,9 @@ def get_video_url(url, quality):
         "skip_download": True,
         "nocheckcertificate": True,
         "geo_bypass": True,
+        "extract_flat": False,
         "http_headers": {
-            "User-Agent": "Mozilla/5.0"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
         }
     }
 
