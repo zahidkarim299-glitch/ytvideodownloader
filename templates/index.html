@@ -173,37 +173,26 @@ function download(quality){
 
 let url=document.getElementById("url").value
 
-let status=document.getElementById("status")
-
-status.innerText="Preparing download..."
-
 fetch("/download",{
-
 method:"POST",
-
 headers:{
 "Content-Type":"application/json"
 },
-
 body:JSON.stringify({
 url:url,
 quality:quality
 })
-
 })
-
 .then(res=>res.json())
 .then(data=>{
 
 if(data.status==="success"){
 
-status.innerText="Starting download..."
-
 window.location.href=data.download_url
 
 }else{
 
-status.innerText="Error: "+data.message
+alert(data.message)
 
 }
 
