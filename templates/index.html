@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>YouTube Downloader</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body>
+
+<div class="header">
+YouTube Video Downloader
+</div>
+
+<div class="container">
+
+<h2>Download YouTube Video</h2>
+
+<div class="input-group">
+<input id="url" placeholder="Paste YouTube link here">
+<button onclick="preview()">Download</button>
+</div>
+
+<!-- DOWNLOAD OPTIONS (HIDDEN FIRST) -->
+<div class="download-box" id="downloadBox" style="display:none;">
+
+<button id="mainDownload" class="main-download" onclick="download(selectedQuality)">
+Download 720p
+</button>
+
+<div class="dropdown">
+<button class="arrow" onclick="toggleDropdown()">▼</button>
+
+<div class="dropdown-content" id="dropdownMenu">
+<button onclick="setQuality('360')">360p</button>
+<button onclick="setQuality('720')">720p</button>
+<button onclick="setQuality('1080')">1080p</button>
+<button onclick="setQuality('audio')">MP3</button>
+</div>
+
+</div>
+</div>
+
+
+
+<!-- THUMBNAIL (HIDDEN FIRST) -->
+<div class="thumbnail" id="thumbBox" style="display:none;">
+<img id="thumb">
+</div>
+
+<!-- PROGRESS BAR -->
+<div class="progress">
+<div class="bar" id="bar"></div>
+</div>
+
+<p id="status"></p>
+
+</div>
+
+<div class="about-section">
+
+<h2>Why I Created This Website</h2>
+
+<p>
+During the month of Ramadan, many of us try to spend our time in a more meaningful way by listening to Islamic lectures, naats, nasheeds, and educational videos on YouTube. Sometimes we want to download these videos so we can listen to them offline without using internet again and again.
+</p>
+
+<p>
+However, when I used popular downloader websites like SaveFrom or Y2Mate, I noticed something very disturbing. Many times these websites show intrusive pop-ups, redirect pages, and even inappropriate 18+ advertisements.
+</p>
+
+<p>
+During Roza, when we are trying to protect our eyes and focus on good things, seeing such advertisements feels very uncomfortable. It breaks concentration and makes the whole experience unpleasant.
+</p>
+
+<p>
+Because of this problem, I decided to build a simple YouTube downloader myself that focuses on a clean and respectful experience.
+</p>
+
+<ul>
+<li>No distracting ads</li>
+<li>No inappropriate pop-ups</li>
+<li>Simple and clean interface</li>
+<li>Fast download options</li>
+<li>Safe to use during Ramadan</li>
+</ul>
+
+<p>
+This website is not created for profit. It is simply a small effort to solve a problem I personally faced and to help others who may want a cleaner downloading experience.
+</p>
+
+<p class="dua">
+If this tool helps you, I am very happy. May Allah accept our efforts and allow us to use our time in beneficial ways.
+</p>
+
+</div>
+
+<script>
+
+/* Selected quality */
+let selectedQuality = "720"
+
+/* Change quality */
+function setQuality(q){
+
+selectedQuality = q
+
+let text = q === "audio" ? "MP3" : q + "p"
+
+document.getElementById("mainDownload").innerText = "Download " + text
+
+document.getElementById("dropdownMenu").style.display="none"
+
+}
+
+/* Toggle dropdown */
+function toggleDropdown(){
+
+let menu=document.getElementById("dropdownMenu")
+
+menu.style.display =
+menu.style.display === "block" ? "none" : "block"
+
+}
+
+/* Extract Video ID */
+function getID(url){
+
+let reg=/^.*((youtu.be\/)|(v\/)|(embed\/)|(watch\?v=)|(shorts\/))([^#&?]*).*/
+
+let match=url.match(reg)
+
+return (match && match[7].length==11)?match[7]:null
+
+}
+
+/* Preview video */
+function preview(){
+
+let url=document.getElementById("url").value
+
+if(!url){
+alert("Paste YouTube link first")
+return
+}
+
+let videoId=getID(url)
+
+if(!videoId){
+alert("Invalid YouTube link")
+return
+}
+
+/* show download options */
+
+document.getElementById("downloadBox").style.display="flex"
+
+/* show thumbnail */
+
+let thumbnail="https://img.youtube.com/vi/"+videoId+"/maxresdefault.jpg"
+
+document.getElementById("thumb").src=thumbnail
+document.getElementById("thumbBox").style.display="block"
+
+}
+
+/* Download video */
+
+function download(quality){
+
+let url=document.getElementById("url").value
+
+let bar=document.getElementById("bar")
+let status=document.getElementById("status")
+
+bar.style.width="0%"
+status.innerText="Starting download..."
+
+let progress=0
+
+let interval=setInterval(()=>{
+
+progress+=5
+bar.style.width=progress+"%"
+
+if(progress>=95){
+clearInterval(interval)
+}
+
+},300)
+
+fetch("/download",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+url:url,
+quality:quality
+})
+
+})
+
+.then(res=>res.json())
+.then(data=>{
+
+bar.style.width="100%"
+status.innerText="Download finished ✔"
+
+})
+
+}
+
+</script>
+
+</body>
+</html>
