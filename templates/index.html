@@ -173,24 +173,9 @@ function download(quality){
 
 let url=document.getElementById("url").value
 
-let bar=document.getElementById("bar")
 let status=document.getElementById("status")
 
-bar.style.width="0%"
-status.innerText="Starting download..."
-
-let progress=0
-
-let interval=setInterval(()=>{
-
-progress+=5
-bar.style.width=progress+"%"
-
-if(progress>=95){
-clearInterval(interval)
-}
-
-},300)
+status.innerText="Preparing download..."
 
 fetch("/download",{
 
@@ -210,8 +195,17 @@ quality:quality
 .then(res=>res.json())
 .then(data=>{
 
-bar.style.width="100%"
-status.innerText="Download finished ✔"
+if(data.status==="success"){
+
+status.innerText="Starting download..."
+
+window.location.href=data.download_url
+
+}else{
+
+status.innerText="Error: "+data.message
+
+}
 
 })
 

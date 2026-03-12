@@ -1,46 +1,59 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, render_template, request, jsonify
 import yt_dlp
 import os
 
 app = Flask(__name__)
-
-progress_data = {"percent": 0}
 
 @app.route("/")
 def home():
     return render_template("index.html")
 
 
-def progress_hook(d):
-
-    if d['status'] == 'downloading':
-        percent = d['_percent_str'].replace('%','').strip()
-        progress_data["percent"] = percent
-
-    if d['status'] == 'finished':
-        progress_data["percent"] = 100
-
-
 @app.route("/download", methods=["POST"])
 def download():
 
     data = request.json
-    url = data["url"]
+    url = data.get("url")
+    quality = data.get("quality", "720")
 
-    ydl_opts = {
-        'outtmpl': 'downloads/%(title)s.%(ext)s',
-        'progress_hooks': [progress_hook]
-    }
+    try:
 
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([url])
+        ydl_opts = {
+            "quiet": True,
+            "skip_download": True
+        }
 
-    return jsonify({"message": "Download finished"})
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=False)
 
+        formats = info["formats"]
 
-@app.route("/progress")
-def progress():
-    return jsonify(progress_data)
+        video_url = None
+
+        if quality == "audio":
+            for f in formats:
+                if f.get("acodec") != "none" and f.get("vcodec") == "none":
+                    video_url = f["url"]
+                    break
+        else:
+            for f in formats:
+                if f.get("height") and int(f["height"]) <= int(quality):
+                    if f.get("acodec") != "none" and f.get("vcodec") != "none":
+                        video_url = f["url"]
+
+        if not video_url:
+            return jsonify({"status": "error", "message": "Quality not found"})
+
+        title = info.get("title", "video")
+
+        return jsonify({
+            "status": "success",
+            "title": title,
+            "download_url": video_url
+        })
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
 
 
 if __name__ == "__main__":
